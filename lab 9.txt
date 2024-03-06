@@ -3,16 +3,16 @@
 #include <string.h>
 #include <sys/time.h>
 
-#define file_name "data.bin"
+#define file_name ".\\datasets\\data.bin"
 
-typedef struct{
+typedef struct{//структура
     char name[20];
     char color[20];
     char country[20];
     int count;
 }flower;
 
-void print(const char *f_name){// вывод в табличном виде из 8 ЛР)
+void print(const char *f_name){// вывод в табличном виде (из 8 ЛР)
     FILE *f=fopen(f_name, "rb");
     if(!f){
         printf("Ошибка открытия файла %s\n", f_name);
@@ -36,7 +36,19 @@ void print(const char *f_name){// вывод в табличном виде из
     fclose(f);
 }
 
-int comparator(flower struct_1,flower struct_2){//сравнивает структуры, возвращает : 1, если результат str1 > str2; 0, если = ; -1, если <
+void reverse(flower * array, int end){//функция, которая переворачивает отсортированный список
+    flower temp;
+    int start=0; 
+    while(start < end){ 
+        temp = array[start]; 
+        array[start] = array[end]; 
+        array[end] = temp; 
+        start++; 
+        end--; 
+    } 
+}
+
+int comparator(flower struct_1,flower struct_2){//сравнивает структуры, возвращает: 1, если результат str1 > str2; 0, если = ; -1, если <
     int flag=-1;
 
     int cmp = strcmp(struct_1.name, struct_2.name);
@@ -69,79 +81,65 @@ int comparator(flower struct_1,flower struct_2){//сравнивает стру�
 }
 
 void choiceSort(flower * array, int len){//сортировка выбором
-
-    for (int i = 0; i < len - 1; i++){//пе
-        int min_i = i;
+    for (int i=0; i<len-1; i++){
+        int min_i=i;
         
-        for (int j = i + 1; j < len; j++){ // находим индекс минимального элемента
+        for (int j=i+1; j<len; j++){ // находим индекс минимального элемента
             if(comparator(array[j],array[min_i])==-1){
-                min_i = j;
+                min_i=j;//если правая структура меньше, чем левая, то min_i=j
             }
         }
         flower temp = array[i];
-        array[i] = array[min_i];//меняем значения местами
+        array[i] = array[min_i];//ставим в начало(на i место) минимальный элемент
         array[min_i] = temp;
     }
 }
 
-void quickSort(flower *array, int first, int last){
+void quickSort(flower *array, int first, int last){//быстрая сортировка
     if (first < last){
-        int left = first, right = last, middle = (left + right) / 2;
-    do
-    {
-    while (comparator(array[left],array[middle])==-1) left++;
-    while (comparator(array[right],array[middle])==1) right--;
-    if (left <= right)
-    {
-    flower tmp = array[left];
-    array[left] = array[right];
-    array[right] = tmp;
-    left++;
-    right--;
-    }
-
-    } while (left <= right);
-    quickSort(array, first, right);
-    quickSort(array, left, last);
+        int left=first, right=last, middle=(left + right)/2;
+        do{
+        while(comparator(array[left],array[middle])==-1) left++;//ищем элемент слева, который неменьше, чем элемент посередине
+        while(comparator(array[right],array[middle])==1) right--;//ищем элемент справа, который небольше, чем элемент по середине
+        if (left <= right){
+            flower tmp = array[left];
+            array[left] = array[right];//меняем два таких элемента местами
+            array[right] = tmp;
+            left++;
+            right--;
+        }
+        }while(left <= right);
+        quickSort(array, first, right);//делаем такую же сортировку для левой и правой части массива
+        quickSort(array, left, last);
     }
 }
 
-void downHeap(flower *array, long k, long n)
-{
+void downHeap(flower *array, long k, long n){//
 	long child;
-	flower new_elem = array[k];
+	flower new_elem=array[k];
 	
-	while(k <= n/2)
-	{
-		child = 2*k;
-		if( child < n && comparator(array[child],array[child+1])==-1)
-		{
+	while(k<=n/2){
+		child=2*k;
+		if( child<n && comparator(array[child],array[child+1])==-1){
 			child++;
 		}
-		if( comparator(new_elem,array[child])!=-1)
-		{
-			break;
-		}
-		array[k] = array[child];
-		k = child;
+		if(comparator(new_elem,array[child])!=-1){
+			break;}
+
+		array[k]=array[child];
+		k=child;
 	}
-	array[k] = new_elem;
+	array[k]=new_elem;
 }
 
 
-void pyramidSort(flower *array, long size)
-{
+void pyramidSort(flower *array, long size){//пирамидальная сортировка
 	long i;
 	flower tmp;
 
-	for(i = size/2; i >= 0; i--)
-	{
-		downHeap(array, i, size-1);
-	}
+	for(i=size/2; i>=0; i--){downHeap(array, i, size-1);}
 
-
-	for(i = size-1; i > 0; i--)
-	{
+	for(i=size-1; i > 0; i--){
 		tmp = array[i];
 		array[i] = array[0];
 		array[0] = tmp;
@@ -163,32 +161,50 @@ int main(){
     fread(array, sizeof(flower), len, f);
     fclose(f);
 
-    int choice, flag;
-    puts("\nВыберите алгоритм сортировки:\n1)Выбором \n2)Быстрая \n3)Пирамидальная");
-    scanf("%d",&choice);
+    int choice, flag, howsort, flag2;
     struct timeval start, end;
     long long time;
     char f_name[20];
-    switch (choice)
-    {
+
+    puts("\nВыберите алгоритм сортировки:\n1)Выбором \n2)Быстрая \n3)Пирамидальная");
+    scanf("%d",&choice);
+    puts("Сортировать по:\n1)Неубыванию\n2)Невозрастанию");
+    scanf("%d",&howsort);
+    switch (howsort){
+        case 1:
+            flag2=0;
+        break;
+        case 2:
+            flag2=1;
+        break;
+    default:
+    puts("Направления сортировки с таким номером нет");
+        break;
+    }
+
+    switch (choice){
     case 1:
         gettimeofday(&start, NULL);//время начала сортировки
 
-        choiceSort(array,len);//ПОМЕНЯТЬ НА НОРМАЛЬНОЕ ОПРЕДЕЛЕНИЕ ДЛИНЫ  
+        choiceSort(array,len);
 
-        gettimeofday(&end, NULL);
-        time = (end.tv_sec - start.tv_sec) * 1000000LL + (end.tv_usec - start.tv_usec);
+        gettimeofday(&end, NULL);//время окончания сортировки
+
+        if(flag2){reverse(array, len-1);}//если надо отсортировать по невозрастанию, то переворачиваем список
+        time = (end.tv_sec - start.tv_sec) * 1000000LL + (end.tv_usec - start.tv_usec);//определяем время работы сортировки
         printf("\nВремя работы сортировки выбором: %lld мкс\n\n",time);
 
-        strcpy(f_name,"choiceSort.bin");
+        strcpy(f_name,"choiceSort.bin");//в f_name записываем название файла, в который будем сохранять отсортированный список
         break;
 
     case 2:
         gettimeofday(&start, NULL);
 
-        quickSort(array,0,len);//ПОМЕНЯТЬ НА НОРМАЛЬНОЕ ОПРЕДЕЛЕНИЕ ДЛИНЫ
+        quickSort(array,0,len);
 
         gettimeofday(&end, NULL);
+
+        if(flag2){reverse(array, len-1);}
         time = (end.tv_sec - start.tv_sec) * 1000000LL + (end.tv_usec - start.tv_usec);
         printf("\nВремя работы быстрой сортировки: %lld мкс\n\n",time);
         strcpy(f_name,"quickSort.bin");
@@ -200,6 +216,8 @@ int main(){
         pyramidSort(array,len);
 
         gettimeofday(&end, NULL);
+
+        if(flag2){reverse(array, len-1);}
         time = (end.tv_sec - start.tv_sec) * 1000000LL + (end.tv_usec - start.tv_usec);
         printf("\nВремя работы пирамидальной сортировки: %lld мкс\n\n",time);
         strcpy(f_name,"pyramidSort.bin");
@@ -213,10 +231,11 @@ int main(){
     fwrite(array, sizeof(flower), len, f);//записываем отсортированную таблицу в отдельный файл
     fclose(f);
     
-    puts("Введите 1, чтобы вывести отсортированную таблицу:");
+    puts("Введите:\n1 - вывести отсортированную таблицу;\n2 - перейти в меню;");
     scanf("%d",&flag);
-    if(flag==1){print(f_name);main();}
+    if(flag==1){print(f_name);main();return 0;}
     free(array);
     if(flag==2){main();}
+    else{puts("Конец работы программы");}
     return 0;
 }
